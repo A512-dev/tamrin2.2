@@ -4,13 +4,12 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-public class MyProgram extends JFrame {
-    public MyProgram() {
-        new FirstPage();
+public class NewGame extends JFrame {
+    public NewGame() {
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
         int x = (int) ((screen.getWidth() - getWidth()) /2);
         int y = (int) ((screen.getHeight() -getHeight()) /2);
-        /*JFrame frame = new JFrame();
+        JFrame frame = new JFrame();
         Gameplay gamePlay = new Gameplay();
         frame.setBounds(x/2,y/4,700,600);
         getContentPane().setLayout(new BoxLayout (this.getContentPane(), BoxLayout.Y_AXIS));
@@ -19,8 +18,6 @@ public class MyProgram extends JFrame {
         frame.setResizable(false);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        Button buttons[];  //Button reference variable
-        buttons = new Button [5];
         /*Button buttonPlay = new Button ("play Game");
         Button buttonInfo = new Button("info");
         Button buttonExit = new Button("exit");
@@ -35,7 +32,7 @@ public class MyProgram extends JFrame {
 
 
 
-        //frame.add(gamePlay);
+        frame.add(gamePlay);
        // run();
     }
 

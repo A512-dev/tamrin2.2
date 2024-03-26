@@ -57,11 +57,25 @@ public class FirstPage extends JFrame {
         buttonNewGame.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                frame.dispose();
+                new NewGame();
             }
         });
         frame.add(buttonHistory);
+        buttonHistory.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+                new History();
+            }
+        });
         frame.add(buttonExit);
+        buttonExit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
         frame.setVisible(true);
     }
 }
