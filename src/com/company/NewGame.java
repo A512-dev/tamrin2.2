@@ -5,19 +5,47 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class NewGame extends JFrame {
-    public NewGame() {
+    SoundManager soundManager;
+    String namePlayer;
+    Colors color;
+    Levels difficulty;
+    public NewGame(String name,Colors color,Levels difficulty) {
+        this.namePlayer = name;
+        this.color = color;
+        this.difficulty = difficulty;
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
         int x = (int) ((screen.getWidth() - getWidth()) /2);
         int y = (int) ((screen.getHeight() -getHeight()) /2);
         JFrame frame = new JFrame();
-        Gameplay gamePlay = new Gameplay();
+        Database database = new Database();
+        Gameplay gamePlay = new Gameplay(name,color,difficulty);
         frame.setBounds(x/2,y/4,700,600);
-        getContentPane().setLayout(new BoxLayout (this.getContentPane(), BoxLayout.Y_AXIS));
+        //getContentPane().setLayout(new BoxLayout (this.getContentPane(), BoxLayout.Y_AXIS));
         frame.setVisible(true);
         frame.setTitle("Breakout Ball");
         frame.setResizable(false);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        if (gamePlay.ended)
+        {
+            frame = new JFrame();
+            frame.dispose();
+            frame.remove(gamePlay);
+            frame.removeAll();
+            JButton newGame = new JButton("New Game");
+            System.out.println("jkwefwfk");
+            newGame.setBounds(400,500,100,100);
+            JButton exit = new JButton("Exit");
+            newGame.setBounds(200,500,100,100);
+            this.add(newGame);
+            this.add(exit);
+
+        }
+        if (!gamePlay.ended)
+        {
+            System.out.println("kwefh");
+            frame.add(gamePlay);
+        }
         /*Button buttonPlay = new Button ("play Game");
         Button buttonInfo = new Button("info");
         Button buttonExit = new Button("exit");
@@ -32,30 +60,8 @@ public class NewGame extends JFrame {
 
 
 
-        frame.add(gamePlay);
+
        // run();
     }
 
-    public void run(){
-//        JFrame frame = new JFrame();
-////        frame.setBounds(10, 10, 700, 600);
-////        frame.setTitle("Breakout Ball");
-////        frame.setResizable(false);
-//
-//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//
-
-
-
-
-
-
-
-        //
-
-
-
-
-
-    }
 }

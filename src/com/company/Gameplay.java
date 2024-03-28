@@ -1,96 +1,151 @@
 package com.company;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 
-import javax.swing.Timer;
-import javax.swing.JPanel;
+import javax.swing.*;
+import javax.swing.border.Border;
 
-public class Gameplay extends JPanel implements KeyListener, ActionListener{
+import static java.awt.geom.Point2D.distance;
+
+public class Gameplay extends JPanel implements MouseListener, ActionListener{
+
     private boolean play = false;
     private int score = 0;
-
-    private int totalBricks = 21;
+    public int power = 0;
+    String name;
+    Colors color;
+    Levels level;
+    final Border blackBorder = BorderFactory.createLineBorder(Color.black);
+    public final int ballDiameter = 20;
+    ArrayList<Ball> balls;
+    ArrayList<Bricks> rects;
+    ArrayList<Item> items;
+    //private int totalBricks = 21;
 
     private Timer timer;
-    private int delay = 8;
 
-    private int playerX = 310;
+    int ballposX = 120;
+     int ballposY = 450;
+     //int ballXdir = 0;
+     //int ballYdir = 0;
 
-    private int ballposX = 120;
-    private int ballposY = 350;
-    private int ballXdir = 1;
-    private int ballYdir = -2;
     boolean shart1 = true;
+    boolean shart2 = false;
+    boolean ended = false;
+    int numOfRound = 0;
 
-    private MapGenerator map;
+    public MapGenerator map;
+    public Ball ball;
+    public ProjectoryLine projectoryLine;
 
-    public Gameplay() {
+
+
+    public Gameplay(String name,Colors color,Levels difficulty) {
+        //Panel gamePanel = new JPanel();
+        //gamePanel.setFocusable(true);
+
         map = new MapGenerator(3, 7);
-        addKeyListener(this);
+        ball = new Ball(ballposX,ballposY);
+        updateDatabasePosition();
+        power = 1;
+//        addKeyListener(this);
+        addMouseListener(this);
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
-        timer = new Timer(delay, this);
+        int delay = 8;
+        timer = new Timer(2, this);
         timer.start();
     }
 
-    public void paint(Graphics g) {
-        //background
-        g.setColor(Color.black);
-        g.fillRect(1, 1, 692, 592);
-
-        // drawing map
-        map.draw((Graphics2D) g);
-
-        // scores
-        g.setColor(Color.white);
-        g.setFont(new Font("serif", Font.BOLD, 25));
-        g.drawString(""+score, 590, 30);
-
-
-        // borders
-        g.setColor(Color.yellow);
-        g.fillRect(0, 0, 3, 592);
-        g.fillRect(0 , 0, 692, 3);
-        g.fillRect(692, 0, 3, 592);
-
-        // the paddle
-        g.setColor(Color.green);
-        g.fillRect(playerX, 550, 100, 8);
-
-        // the ball
-        g.setColor(Color.yellow);
-        g.fillOval(ballposX, ballposY, 20, 20);
-        if (!shart1)
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        //new Game
+        if (e.getX()>300 && e.getX()<400 && e.getY()<200 && e.getY()>100)
         {
-            play = false;
-            ballposY = 560;
-            ballposX = 0;
-            ballXdir = 0;
-            ballYdir = 0;
-            g.setColor(Color.red);
-            g.setFont(new Font("serif", Font.BOLD, 30));
-            g.drawString("Game Over, Scores: "+score, getWidth()/2, getHeight()/2);
-
-            g.setFont(new Font("serif", Font.BOLD, 20));
-            g.drawString("Press Enter to Restart ", 230, 350);
+            Details details = new Details();
+            details.name = name;
+            details.score = score;
+            details.level = level;
+            Database.namesData.add(details);
+            new Gameplay(name,color,level);
+            //detail.time = timePast;
         }
-        if (ballposY > 570) {
-            if (!map.reposition())
+        if (e.getX()>100 && e.getX()<200 && e.getY()<200 && e.getY()>100)
+        {
+            Details details = new Details();
+            details.name = name;
+            details.score = score;
+            details.level = level;
+            Database.namesData.add(details);
+            new MyProgram();
+            //detail.time = timePast;
+        }
+
+        //System.out.println(",wefjqefkwelfwelfwefwef;wef;wfe;");
+
+    }
+
+
+    public void paint(Graphics g) {
+        if (!ended)
+        {
+            //background
+            g.setColor(Color.black);
+            g.fillRect(1, 1, 692, 592);
+
+            // drawing map
+            map.draw((Graphics2D) g);
+
+            // scores
+            g.setColor(Color.white);
+            g.setFont(new Font("serif", Font.BOLD, 25));
+            g.drawString(""+score, 590, 30);
+
+            //power
+            g.setColor(Color.white);
+            g.setFont(new Font("serif", Font.BOLD, 25));
+            g.drawString(""+power, 10, 30);
+
+
+            // borders
+            g.setColor(Color.yellow);
+            g.fillRect(0, 0, 3, 592);
+            g.fillRect(0 , 0, 692, 3);
+            g.fillRect(692, 0, 3, 592);
+
+            // the ball
+            ball.drawBalls((Graphics2D) g);
+            //        g.setColor(Color.yellow);
+//        g.fillOval(ballposX, ballposY, 20, 20);
+
+            if (!shart2 || numOfRound==0)
             {
-                shart1 = false;
+                projectoryLine = new ProjectoryLine();
+                projectoryLine.drawLine((Graphics2D) g);
+
+            }
+
+            if (!shart1)
+            {
                 play = false;
-                ballposY = 570;
-                ballposX = 0;
-                ballXdir = 0;
-                ballYdir = 0;
+                ended = true;
+                ball.ballposY = 550;
+                ball.ballposX = 0;
+                ball.ballDirX = 0;
+                ball.ballDirY = 0;
+
+                updateDatabasePosition();
+                this.removeAll();
+                JButton newGame = new JButton("New Game");
+                newGame.setBounds(400,500,100,100);
+                JButton exit = new JButton("Exit");
+                newGame.setBounds(200,500,100,100);
+                this.add(newGame);
+                this.add(exit);
                 g.setColor(Color.red);
                 g.setFont(new Font("serif", Font.BOLD, 30));
                 g.drawString("Game Over, Scores: "+score, getWidth()/2, getHeight()/2);
@@ -98,127 +153,431 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener{
                 g.setFont(new Font("serif", Font.BOLD, 20));
                 g.drawString("Press Enter to Restart ", 230, 350);
             }
-            ballposY = 570;
-            ballposX = 0;
-            ballXdir = 0;
-            ballYdir = -19;
-        }
-        if (totalBricks <= 10) {
-            play = false;
-            ballXdir = 0;
-            ballYdir = 0;
-            g.setColor(Color.red);
-            g.setFont(new Font("serif", Font.BOLD, 30));
-            g.drawString("You Won, Scores: "+score, 190, 300);
+            if (ball.ballposY > 561) {
+                if (shart2 && !map.reposition())
+                {
+                    System.out.println("in change of levels");
+                    gameOver(g);
+                }
+                //ballposX = 120;
+                ball.ballposY = 551;
+                ball.ballDirY = 0;
+                ball.ballDirX = 0;
+                power++;
+                play = false;
+                shart2 = false;
+                updateDatabasePosition();
+                ProjectoryLine projectoryLine = new ProjectoryLine();
+                add(projectoryLine);
+                //MouseListener.
+                //MouseMotionEvent mouseMotionEvent = new MouseMotionEvent();
+                //mouseMotionEvent.drawLine(g);
+//            ballXdir = Database.getBallXdir();
+//            ballYdir = Database.getBallYdir();
+                //Scanner scanner = new Scanner(System.in);
+                //ballXdir = scanner.nextInt();
+                //ballYdir = -scanner.nextInt();
+            }
 
-            g.drawString("jefhwefkwef",200,325);
-            g.setFont(new Font("serif", Font.BOLD, 20));
-            g.drawString("Press Enter to Restart ", 230, 350);
+            if (score >= 290) {
+                ended = true;
+                System.out.println("score>290");
+                gameOver(g);
+            }
+            if (!play)
+            {
+                for (int i=0; i<map.mapBricks.size(); i++)
+                {
+                    for (int j=0; j<map.mapBricks.get(i).size(); j++)
+                    {
+                        map.mapBricks.get(i).get(j).posY += 0.13;
+                        if (map.mapBricks.get(i).get(j).posY+ map.brickHeight>550 && map.mapBricks.get(i).get(j).posX<700)
+                        {
+                            ended = true;
+                            map.mapBricks.get(i).get(j).printDetails();
+                            //System.out.println("in scroll");
+                            gameOver(g);
+                        }
+
+                    }
+                }
+            }
+            repaint();
+
         }
+        if (ended)
+        {
+            this.removeAll();
+            g.setColor(Color.black);
+            g.fillRect(0,0,700,600);
+            g.drawRect(0,0,600,700);
+            g.setColor(Color.white);
+            g.fillRect(100,100,100,100);
+            g.fillRect(300,100,100,100);
+            g.setColor(Color.black);
+            g.drawString("Back",130,150);
+            g.drawString("New Game",330,150);
+            ended = true;
+            play = false;
+            ball.ballDirX = 0;
+            ball.ballDirY = 0;
+            //this.repaint();
+            JButton newGame = new JButton("New Game");
+            newGame.setBackground(Color.red);
+            System.out.println("new game");
+            newGame.setBounds(400,500,100,100);
+            JButton exit = new JButton("Exit");
+            newGame.setBounds(200,500,100,100);
+            this.add(newGame);
+            this.add(exit);
+        }
+            //this.removeAll();
         repaint();
         g.dispose();
+
+    }
+
+    private void gameOver(Graphics g) {
+        this.removeAll();
+        ended = true;
+        play = false;
+        ball.ballDirX = 0;
+        ball.ballDirY = 0;
+        //this.repaint();
+        JButton newGame = new JButton("New Game");
+        newGame.setBackground(Color.red);
+        newGame.setBounds(400,500,100,100);
+        JButton exit = new JButton("Exit");
+        newGame.setBounds(200,500,100,100);
+        this.add(newGame);
+        this.add(exit);
+//        g.setColor(Color.red);
+//        g.setFont(new Font("serif", Font.BOLD, 30));
+//        g.drawString("You Lost, Scores: "+score, 190, 300);
+//
+//        g.drawString("jefhwefkwef",200,325);
+//        g.setFont(new Font("serif", Font.BOLD, 20));
+//        g.drawString("Press Enter to Restart ", 230, 350);
     }
 
     @Override
-    public void actionPerformed (ActionEvent e) {
-        timer.start();
-        if (play) {
-            if (new Rectangle(ballposX, ballposY, 20, 20).intersects(new Rectangle(playerX, 550, 100, 8))) {
-                ballYdir = -ballYdir;
-            }
+    public void mouseEntered(MouseEvent e) {
+    }
+    @Override
+    public void mouseExited(MouseEvent e) {
 
-            A: for (int i = 0; i <map.numRowOfBlocks; i++) {
+    }
+
+    private void updateDatabasePosition() {
+        Database.setBallXdir(ball.ballDirX);
+        Database.setBallYdir(ball.ballDirY);
+        Database.setBallPosX(ball.ballposX);
+        Database.setBallPosY(ball.ballposY);
+    }
+
+
+    @Override
+    public void actionPerformed (ActionEvent e) {
+        if (!ended)
+        {
+            boolean collision = false;
+            //timer = new Timer(8,this);
+            //timer.start();
+            A: for (int i = 0; i <map.mapBricks.size(); i++) {
                 for (int j = 0; j < map.mapBricks.get(i).size(); j++) {
                     if (map.mapBricks.get(i).get(j).valueOf > 0) {
-                        int brickX = map.mapBricks.get(i).get(j).posX;
-                        int brickY = map.mapBricks.get(i).get(j).posY;
+                        double brickX = map.mapBricks.get(i).get(j).posX;
+                        double brickY = map.mapBricks.get(i).get(j).posY;
                         int brickWidth = map.brickWidth;
                         int brickHeight = map.brickHeight;
 
-                        Rectangle rect = new Rectangle(brickX, brickY, brickWidth, brickHeight);
-                        Rectangle ballRect = new Rectangle(ballposX, ballposY, 20, 20);
-                        Rectangle brickRect = rect;
+                        Rectangle2D.Double rect = new Rectangle2D.Double(brickX, brickY, brickWidth, brickHeight);
+                        Ellipse2D ballRect = new Ellipse2D.Double(ball.ballposX, ball.ballposY, 20, 20);
+                        Rectangle2D brickRect = rect;
 
-                        if (ballRect.intersects(brickRect)) {
-                            map.setBrickValue(0, i, j);
-                            totalBricks--;
-                            score += 1;
+                        if (ballRect.intersects(rect)) {
+                            System.out.println("aaaaaaaaa");
+                            map.mapBricks.get(i).get(j).valueOf -= power;
+                            score += power;
 
-                            if (ballposX + 19 <= brickRect.x || ballposX + 1 >= brickRect.x + brickRect.width) {
-                                ballXdir = -ballXdir;
+                            if (ball.ballposX + 19 <= brickRect.getX() || ball.ballposX + 1 >= brickRect.getX() + brickRect.getWidth()) {
+                                ball.ballDirX = -ball.ballDirX;
                             } else {
-                                ballYdir = -ballYdir;
+                                ball.ballDirY = -ball.ballDirY;
                             }
-
                             break A;
                         }
                     }
                 }
             }
+            if (shart2) {
+                if (numOfRound == 0)
+                    numOfRound++;
+                ball.ballLastX = ball.ballposX;
+                ball.ballLastY = ball.ballposY;
+                ball.ballposX += ball.ballDirX;
+                ball.ballposY += ball.ballDirY;
+                updateDatabasePosition();
+                if (ball.ballposX <= 0) {
+                    ball.ballDirX = -ball.ballDirX;
+                    updateDatabasePosition();
+                }
+                if (ball.ballposY < 0) {
+                    ball.ballDirY = -ball.ballDirY;
+                    updateDatabasePosition();
+                }
+                if (ball.ballposX > 660) {
+                    ball.ballDirX = -ball.ballDirX;
+                    updateDatabasePosition();
+                }
+            }
+        }
+//        A:
+//        for (int i = 0; i < map.numRowOfBlocks; i++) {
+//            for (int j = 0; j < map.mapBricks.get(i).size(); j++) {
+//                if (map.mapBricks.get(i).get(j).posX < 670 && map.mapBricks.get(i).get(j).valueOf > 0) {
+//
+//                    double brickX = map.mapBricks.get(i).get(j).posX;
+//                    double brickY = map.mapBricks.get(i).get(j).posY;
+//                    //System.out.println(brickX+"...."+brickY);
+//                    int brickWidth = map.brickWidth;
+//                    int brickHeight = map.brickHeight;
+//
+//                    Rect rect = map.mapBricks.get(i).get(j);
+//                    //Rectangle ballRect = new Rectangle(ballposX, ballposY, 20, 20);
+//                    //Rectangle brickRect = rect;
+//                    Rectangle2D.Double brickRect = new Rectangle2D.Double(brickX, brickY, brickWidth, brickHeight);
+//                    Ellipse2D.Double circle = new Ellipse2D.Double(ballposX, ballposY, ballDiameter, ballDiameter);
+////                    if (ball.ballDirY == 0) {
+////                        ball.ballDirY = 1;
+////                    }
+//
+//                    ///////////////
+//                    System.out.println(circle.intersects(brickRect));
+//                    //9 halat dare
+//                    if (ball.ballposX>rect.posX && ball.ballposX<rect.posX+brickWidth)
+//                    {
+//                        //halat 1
+//                        if (ball.ballposY>rect.posY+brickHeight && ball.ballposY+ball.ballDirY<=rect.posY+brickHeight)
+//                        {
+//                            collision = true;
+//                            ball.ballDirY = -ball.ballDirY;
+//                        }
+//                        //halat 2
+//                        if (!collision && ball.ballposY+ballDiameter>rect.posY && ball.ballposY+ballDiameter+ball.ballDirY<=rect.posY)
+//                        {
+//                            collision = true;
+//                            ball.ballDirY = -ball.ballDirY;
+//                        }
+//                    }
+//                    if (!collision && ball.ballposY>rect.posY && ball.ballposY<rect.posY+brickHeight)
+//                    {
+//                        //halat 1
+//                        if (ball.ballposX>rect.posX+brickWidth && ball.ballposY+ball.ballDirY<=rect.posY+brickWidth)
+//                        {
+//                            collision = true;
+//                            ball.ballDirX = -ball.ballDirX;
+//                        }
+//                        //halat 2
+//                        if (!collision && ball.ballposX+ballDiameter<rect.posX && ball.ballposY+ballDiameter+ball.ballDirY<=rect.posY)
+//                        {
+//                            collision = true;
+//                            ball.ballDirX = -ball.ballDirX;
+//                        }
+//                    }
+//                    if (!collision && ball.ballposY>rect.posY+brickHeight && ball.ballposX>rect.posX+brickWidth)
+//                    {
+//                        if (ball.ballposY+ball.ballDirY<=rect.posY+brickHeight)
+//
+//                    }
+//                    if (circle.intersects(brickRect)) {
+//                        System.out.println("krfjwrfklwef");
+//                        map.mapBricks.get(i).get(j).valueOf -= power;
+//                        if (ballposX + 18 <= brickRect.x || ballposX + 3 - 1 >= brickRect.x + brickRect.width) {
+//                            ball.ballDirX = -ball.ballDirX;
+//                        } else {
+//                            ball.ballDirY = -ball.ballDirY;
+//                        }
+//                        if (map.mapBricks.get(i).get(j).valueOf <= 0) {
+//                            map.mapBricks.get(i).remove(j);
+//                            score += rect.originalValue;
+//                            j--;
+//                        }
+//                        updateDatabasePosition();
+                        //totalBricks--;
+                        //break A;
+//                    if (ball.ballDirY > 0 && ball.ballLastY + 10 < (rect.posY) && ball.ballposY + 10 >= (rect.posY)) {
+//                        // important
+//                        double tempX = (double) (ball.ballDirX / ball.ballDirY) * (rect.posY - (ball.ballLastY + 10)) + ball.ballLastX;
+//                        if (tempX >= rect.posX && tempX <= rect.posX + 50) {
+//                            ball.ballDirY = (-1) * ball.ballDirY;
+//                            ball.ballposY = (int) (2 * (rect.posY - 10) - ball.ballposY);
+//                            rect.valueOf -= power;
+//                            collision = true;
+//                        }
+//                    }
+//                    if (!collision && ball.ballDirY < 0 && ball.ballLastY - 10 > (rect.posY + 50) && ball.ballposY - 10 <= (rect.posY + 50)) {
+//                        // important
+//                        double tempX = (double) (ball.ballDirX / ball.ballDirY) * ((rect.posY + 50) - (ball.ballLastY - 10)) + ball.ballLastX;
+//                        if (tempX >= rect.posX && tempX <= rect.posX + 50) {
+//                            ball.ballDirY = (-1) * ball.ballDirY;
+//                            ball.ballposY = (int) (2 * (rect.posY + 60) - ball.ballposY);
+//                            rect.valueOf -= power;
+//                            collision = true;
+//                        }
+//                    }
+//                    if (!collision && ball.ballDirX > 0 && ball.ballLastX + 10 < (rect.posX) && ball.ballposX + 10 >= (rect.posX)) {
+//                        // important
+//                        double tempY = (double) (ball.ballDirY / ball.ballDirX) * (rect.posX - (ball.ballLastX + 10)) + ball.ballLastY;
+//                        if (tempY >= rect.posY && tempY <= rect.posY + 50) {
+//                            ball.ballDirX = (-1) * ball.ballDirX;
+//                            ball.ballposX = (int) (2 * (rect.posX - 10) - ball.ballposX);
+//                            rect.valueOf -= power;
+//                            collision = true;
+//                        }
+//                    }
+//                    if (!collision && ball.ballDirX < 0 && ball.ballLastX - 10 > (rect.posX + 50) && ball.ballposX - 10 <= (rect.posX + 50)) {
+//                        // important
+//                        double tempY = (double) (ball.ballDirY / ball.ballDirX) * ((rect.posX + 50) - (ball.ballLastX - 10)) + ball.ballLastY;
+//                        if (tempY >= rect.posY && tempY <= rect.posY + 50) {
+//                            ball.ballDirX = (-1) * ball.ballDirX;
+//                            ball.ballposX = (int) (2 * (rect.posX + 60) - ball.ballposX);
+//                            rect.valueOf -= power;
+//                            collision = true;
+//                        }
+//                    }
+//                    if (!collision && distance(rect.posX, rect.posY, ball.ballposX, ball.ballposY) < 10) {
+//                        int temp = ball.ballDirX;
+//                        ball.ballDirX = (-1) * ball.ballDirY;
+//                        ball.ballDirY = (-1) * temp;
+//                        ball.ballposX = ball.ballposX + (int) (ball.ballDirX * (10 - distance(rect.posX, rect.posY, ball.ballposX, ball.ballposY)) / 10);
+//                        ball.ballposY = ball.ballposY + (int) (ball.ballDirY * (10 - distance(rect.posX, rect.posY, ball.ballposX, ball.ballposY)) / 10);
+//                        rect.valueOf -= power;
+//                        collision = true;
+//                    }
+//                    if (!collision && distance(rect.posX + 50, rect.posY, ball.ballposX, ball.ballposY) < 10) {
+//                        int temp = ball.ballDirX;
+//                        ball.ballDirX = ball.ballDirY;
+//                        ball.ballDirY = temp;
+//                        ball.ballposX = ball.ballposX + (int) (ball.ballDirX * (10 - distance(rect.posX + 50, rect.posY, ball.ballposX, ball.ballposY)) / 10);
+//                        ball.ballposY = ball.ballposY + (int) (ball.ballDirY * (10 - distance(rect.posX + 50, rect.posY, ball.ballposX, ball.ballposY)) / 10);
+//                        rect.valueOf -= power;
+//                        collision = true;
+//                    }
+//                    if (!collision && distance(rect.posX, rect.posY + 50, ball.ballposX, ball.ballposY) < 10) {
+//                        int temp = ball.ballDirX;
+//                        ball.ballDirX = ball.ballDirY;
+//                        ball.ballDirY = temp;
+//                        ball.ballposX = ball.ballposX + (int) (ball.ballDirX * (10 - distance(rect.posX, rect.posY + 50, ball.ballposX, ball.ballposY)) / 10);
+//                        ball.ballposY = ball.ballposY + (int) (ball.ballDirY * (10 - distance(rect.posX, rect.posY + 50, ball.ballposX, ball.ballposY)) / 10);
+//                        rect.valueOf -= power;
+//                        collision = true;
+//                    }
+//                    if (!collision && distance(rect.posX + 50, rect.posY + 50, ball.ballposX, ball.ballposY) < 10) {
+//                        int temp = ball.ballDirX;
+//                        ball.ballDirX = (-1) * ball.ballDirY;
+//                        ball.ballDirY = (-1) * temp;
+//                        ball.ballposX = ball.ballposX + (int) (ball.ballDirX * (10 - distance(rect.posX + 50, rect.posY + 50, ball.ballposX, ball.ballposY)) / 10);
+//                        ball.ballposY = ball.ballposY + (int) (ball.ballDirY * (10 - distance(rect.posX + 50, rect.posY + 50, ball.ballposX, ball.ballposY)) / 10);
+//                        rect.valueOf -= power;
+//                    }
+//                    if (ball.ballDirY == 0) {
+//                        ball.ballDirY = 1;
+//                    }
+//                    if (rect.valueOf <= 0) {
+//                        rects.remove(j);
+//                        score += rect.originalValue;
+//                        j--;
+//
+    }
+       // repaint();
+    @Override
+    public void mousePressed(MouseEvent e) {
+        Database.setPosXMouseData(e.getX());
+        Database.setPosYMouseData(e.getY());
+        System.out.println("MX:"+e.getX()+"......MY"+e.getY());
 
-            ballposX += ballXdir;
-            ballposY += ballYdir;
-            if (ballposX < 0) {
-                ballXdir = -ballXdir;
-            }
-            if (ballposY < 0) {
-                ballYdir = -ballYdir;
-            }
-            if (ballposX > 670) {
-                ballXdir = -ballXdir;
-            }
+        System.out.println(1);
+        if (!play)
+        {
+
+            ball.ballDirX += Database.getPosXMouseData() - ballposX;
+            ball.ballDirY += Database.getPosYMouseData() - ballposY;
+            ball.ballDirX = ball.ballDirX*2/(-ball.ballDirY);
+            ball.ballDirY = -2;
+        }
+        System.out.println("dirX:"+ball.ballDirX+".......dirY:"+ball.ballDirY);
+        //repaint();
+    }
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (!play)
+        {
+            shart2 = true;
+            play = true;
+            System.out.println("released: play:"+play+".....shart2:"+shart2);
         }
         repaint();
-
     }
-    @Override
-    public void keyReleased (KeyEvent e) {}
+//    @Override
+//    public void keyReleased (KeyEvent e) {}
+//
+//    @Override
+//    public void keyTyped (KeyEvent e) {}
+//
+//    @Override
+//    public void keyPressed (KeyEvent e) {
+//        if(e.getKeyCode() == KeyEvent.VK_RIGHT) {
+//            if (playerX >= 600) {
+//                playerX = 600;
+//            } else {
+//                moveRight();
+//            }
+//        }
+//        if(e.getKeyCode() == KeyEvent.VK_LEFT) {
+//            if (playerX < 10) {
+//                playerX = 10;
+//            } else {
+//                moveLeft();
+//            }
+//        }
+//
+//        if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+//            if (!play) {
+//                if (!shart2)
+//                {
+//
+//                }
+//                play = true;
+//                shart1 = true;
+//                shart2 = true;
+//                ballposX = 220;
+//                ballposY = 450;
+//                ballXdir = Database.getBallXdir();
+//                ballYdir = Database.getBallYdir();
+//                playerX = 310;
+//                score = 0;
+//                //totalBricks = 21;
+//                map = new MapGenerator (3, 7);
+//
+//                repaint();
+//            }
+//        }
+//
+//    }
+//    public void moveRight() {
+//        play = true;
+//        playerX += 20;
+//    }
+//    public void moveLeft() {
+//        play = true;
+//        playerX -= 20;
+//    }
 
-    @Override
-    public void keyTyped (KeyEvent e) {}
 
-    @Override
-    public void keyPressed (KeyEvent e) {
-        if(e.getKeyCode() == KeyEvent.VK_RIGHT) {
-            if (playerX >= 600) {
-                playerX = 600;
-            } else {
-                moveRight();
-            }
-        }
-        if(e.getKeyCode() == KeyEvent.VK_LEFT) {
-            if (playerX < 10) {
-                playerX = 10;
-            } else {
-                moveLeft();
-            }
-        }
-
-        if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-            if (!play) {
-                play = true;
-                shart1 = true;
-                ballposX = 120;
-                ballposY = 350;
-                ballXdir = -1;
-                ballYdir = -2;
-                playerX = 310;
-                score = 0;
-                totalBricks = 21;
-                map = new MapGenerator (3, 7);
-
-                repaint();
-            }
-        }
-
+    public MapGenerator getMap() {
+        return map;
     }
-    public void moveRight() {
-        play = true;
-        playerX += 20;
-    }
-    public void moveLeft() {
-        play = true;
-        playerX -= 20;
-    }
+
 
 }
