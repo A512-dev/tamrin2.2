@@ -16,8 +16,8 @@ public class Database {
      }
       static int ballPosXData;
       static int ballPosYData;
-      static int ballXdirData;
-      static int ballYdirData;
+      static double ballXdirData;
+      static double ballYdirData;
       static int posXMouseData;
       static int posYMouseData;
       static ArrayList<Details> namesData = new ArrayList<>();
@@ -61,19 +61,19 @@ public class Database {
         Database.ballPosYData = ballPosY;
     }
 
-    public static int getBallXdir() {
+    public static double getBallXdir() {
         return ballXdirData;
     }
 
-    public static void setBallXdir(int ballXdir) {
+    public static void setBallXdir(double ballXdir) {
         Database.ballXdirData = ballXdir;
     }
 
-    public static int getBallYdir() {
+    public static double getBallYdir() {
         return ballYdirData;
     }
 
-    public static void setBallYdir(int ballYdir) {
+    public static void setBallYdir(double ballYdir) {
         Database.ballYdirData = ballYdir;
     }
 }

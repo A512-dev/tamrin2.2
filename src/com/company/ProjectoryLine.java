@@ -12,8 +12,8 @@ import java.text.spi.BreakIteratorProvider;
 public class ProjectoryLine extends JPanel implements MouseMotionListener, MouseListener {
     public static int ballPosXM = Database.getBallPosX();
     public static int ballPosYM = Database.getBallPosY();
-    public static int ballXDirM = Database.getBallXdir();
-    public static int ballYDirM = Database.getBallYdir();
+    public static double ballXDirM = Database.getBallXdir();
+    public static double ballYDirM = Database.getBallYdir();
     static int posXMouse = Database.getPosXMouseData();
     static int posYMouse = Database.getPosYMouseData();
     public ProjectoryLine(){

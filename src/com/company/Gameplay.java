@@ -14,6 +14,9 @@ import static java.awt.geom.Point2D.distance;
 public class Gameplay extends JPanel implements MouseListener, ActionListener{
 
     private boolean play = false;
+
+    double brickdirDown;
+    Color ballColor;
     private int score = 0;
     public int power = 0;
     String name;
@@ -29,7 +32,7 @@ public class Gameplay extends JPanel implements MouseListener, ActionListener{
     private Timer timer;
 
     int ballposX = 120;
-     int ballposY = 450;
+    int ballposY = 450;
      //int ballXdir = 0;
      //int ballYdir = 0;
 
@@ -45,11 +48,21 @@ public class Gameplay extends JPanel implements MouseListener, ActionListener{
 
 
     public Gameplay(String name,Colors color,Levels difficulty) {
+        switch (difficulty) {
+            case Easy -> brickdirDown = 0.14;
+            case Medium -> brickdirDown = 0.20;
+            case Hard -> brickdirDown = 0.22;
+        }
+        switch (color) {
+            case Red -> ballColor = Color.red;
+            case Blue -> ballColor = Color.blue;
+            case Green -> ballColor = Color.green;
+        }
         //Panel gamePanel = new JPanel();
         //gamePanel.setFocusable(true);
 
         map = new MapGenerator(3, 7);
-        ball = new Ball(ballposX,ballposY);
+        ball = new Ball(ballposX,ballposY,ballColor);
         updateDatabasePosition();
         power = 1;
 //        addKeyListener(this);
@@ -59,34 +72,6 @@ public class Gameplay extends JPanel implements MouseListener, ActionListener{
         int delay = 8;
         timer = new Timer(2, this);
         timer.start();
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        //new Game
-        if (e.getX()>300 && e.getX()<400 && e.getY()<200 && e.getY()>100)
-        {
-            Details details = new Details();
-            details.name = name;
-            details.score = score;
-            details.level = level;
-            Database.namesData.add(details);
-            new Gameplay(name,color,level);
-            //detail.time = timePast;
-        }
-        if (e.getX()>100 && e.getX()<200 && e.getY()<200 && e.getY()>100)
-        {
-            Details details = new Details();
-            details.name = name;
-            details.score = score;
-            details.level = level;
-            Database.namesData.add(details);
-            new MyProgram();
-            //detail.time = timePast;
-        }
-
-        //System.out.println(",wefjqefkwelfwelfwefwef;wef;wfe;");
-
     }
 
 
@@ -190,7 +175,7 @@ public class Gameplay extends JPanel implements MouseListener, ActionListener{
                 {
                     for (int j=0; j<map.mapBricks.get(i).size(); j++)
                     {
-                        map.mapBricks.get(i).get(j).posY += 0.13;
+                        map.mapBricks.get(i).get(j).posY += brickdirDown;
                         if (map.mapBricks.get(i).get(j).posY+ map.brickHeight>550 && map.mapBricks.get(i).get(j).posX<700)
                         {
                             ended = true;
@@ -280,9 +265,11 @@ public class Gameplay extends JPanel implements MouseListener, ActionListener{
     public void actionPerformed (ActionEvent e) {
         if (!ended)
         {
+//            if (ball.ballDirX<400 && ball.ballDirY<2)
+//                ball.ballDirY = -4;
             boolean collision = false;
             //timer = new Timer(8,this);
-            //timer.start();
+            timer.start();
             A: for (int i = 0; i <map.mapBricks.size(); i++) {
                 for (int j = 0; j < map.mapBricks.get(i).size(); j++) {
                     if (map.mapBricks.get(i).get(j).valueOf > 0) {
@@ -296,7 +283,7 @@ public class Gameplay extends JPanel implements MouseListener, ActionListener{
                         Rectangle2D brickRect = rect;
 
                         if (ballRect.intersects(rect)) {
-                            System.out.println("aaaaaaaaa");
+                            //System.out.println("aaaaaaaaa");
                             map.mapBricks.get(i).get(j).valueOf -= power;
                             score += power;
 
@@ -331,6 +318,7 @@ public class Gameplay extends JPanel implements MouseListener, ActionListener{
                     updateDatabasePosition();
                 }
             }
+            repaint();
         }
 //        A:
 //        for (int i = 0; i < map.numRowOfBlocks; i++) {
@@ -495,16 +483,19 @@ public class Gameplay extends JPanel implements MouseListener, ActionListener{
     public void mousePressed(MouseEvent e) {
         Database.setPosXMouseData(e.getX());
         Database.setPosYMouseData(e.getY());
-        System.out.println("MX:"+e.getX()+"......MY"+e.getY());
+        //System.out.println("MX:"+e.getX()+"......MY"+e.getY());
 
-        System.out.println(1);
+        //System.out.println(1);
         if (!play)
         {
-
-            ball.ballDirX += Database.getPosXMouseData() - ballposX;
-            ball.ballDirY += Database.getPosYMouseData() - ballposY;
-            ball.ballDirX = ball.ballDirX*2/(-ball.ballDirY);
-            ball.ballDirY = -2;
+            double x = (double)(Database.getPosXMouseData()-ball.ballposX)/(double) (Database.getPosYMouseData()-ball.ballposY);
+            ball.ballDirY = -Math.sqrt(25/(Math.pow(x,2)+1));
+            if ((Database.getPosXMouseData()-ball.ballposX)>0)
+                ball.ballDirX = (ball.ballDirY)*(x);
+            else if ((Database.getPosXMouseData()-ball.ballposX)<0)
+                ball.ballDirX = (ball.ballDirY)*(x);
+            else
+                ball.ballDirX = 0;
         }
         System.out.println("dirX:"+ball.ballDirX+".......dirY:"+ball.ballDirY);
         //repaint();
@@ -515,10 +506,67 @@ public class Gameplay extends JPanel implements MouseListener, ActionListener{
         {
             shart2 = true;
             play = true;
-            System.out.println("released: play:"+play+".....shart2:"+shart2);
+            //System.out.println("released: play:"+play+".....shart2:"+shart2);
         }
         repaint();
     }
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        //new Game
+        if (ended && e.getX()>100 && e.getX()<200 && e.getY()<200 && e.getY()>100)
+        {
+            Details details = new Details();
+            details.name = name;
+            details.score = score;
+            details.level = level;
+            this.removeAll();
+            Database.namesData.add(details);
+            new MyProgram().run();
+            //detail.time = timePast;
+        }
+        if (ended &&e.getX()>300 && e.getX()<400 && e.getY()<200 && e.getY()>100)
+        {
+            Details details = new Details();
+            details.name = name;
+            details.score = score;
+            details.level = level;
+            Database.namesData.add(details);
+            this.removeAll();
+            play = false;
+            ended = false;
+            shart2 = true;
+            shart1 = true;
+            score = 0;
+            map = new MapGenerator (3, 7);
+            repaint();
+            // if (!play) {
+//                if (!shart2)
+//                {
+//
+//                }
+//                play = true;
+//                shart1 = true;
+//                shart2 = true;
+//                ballposX = 220;
+//                ballposY = 450;
+//                ballXdir = Database.getBallXdir();
+//                ballYdir = Database.getBallYdir();
+//                playerX = 310;
+//                score = 0;
+//                //totalBricks = 21;
+//                map = new MapGenerator (3, 7);
+//
+//                repaint();
+//            }
+//        }
+            //detail.time = timePast;
+        }
+
+        //System.out.println(",wefjqefkwelfwelfwefwef;wef;wfe;");
+
+    }
+
+
 //    @Override
 //    public void keyReleased (KeyEvent e) {}
 //
